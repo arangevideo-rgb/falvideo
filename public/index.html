@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>falvideo</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; background: #0b0b0f; color: #eee; }
+  h1 { font-size: 20px; }
+  textarea { width: 100%; height: 90px; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #16161c; color: #eee; font-size: 14px; }
+  button { margin-top: 10px; padding: 10px 20px; border: none; border-radius: 8px; background: #6c5ce7; color: white; font-size: 14px; cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  #status { margin-top: 12px; font-size: 13px; color: #aaa; white-space: pre-wrap; }
+  video { margin-top: 16px; width: 100%; border-radius: 8px; }
+</style>
+</head>
+<body>
+  <h1>falvideo — text to video (fal.ai)</h1>
+  <textarea id="prompt" placeholder="生成したい動画の内容を入力してください"></textarea>
+  <br>
+  <button id="generate">生成する</button>
+  <div id="status"></div>
+  <video id="result" controls hidden></video>
+
+<script>
+  const btn = document.getElementById('generate');
+  const promptEl = document.getElementById('prompt');
+  const statusEl = document.getElementById('status');
+  const videoEl = document.getElementById('result');
+
+  btn.addEventListener('click', async () => {
+    const prompt = promptEl.value.trim();
+    if (!prompt) return;
+
+    btn.disabled = true;
+    videoEl.hidden = true;
+    statusEl.textContent = '生成中です。1〜数分かかることがあります…';
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || '生成に失敗しました');
+
+      videoEl.src = data.video.url;
+      videoEl.hidden = false;
+      statusEl.textContent = '完了しました。';
+    } catch (err) {
+      statusEl.textContent = 'エラー: ' + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
