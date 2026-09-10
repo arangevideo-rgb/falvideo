@@ -48,7 +48,9 @@
 
       videoEl.src = data.video.url;
       videoEl.hidden = false;
-      statusEl.textContent = '完了しました。';
+      statusEl.textContent = data.model
+        ? `完了しました。(モデル: ${data.model}${data.reasoning ? ' — ' + data.reasoning : ''})`
+        : '完了しました。';
     } catch (err) {
       statusEl.textContent = 'エラー: ' + err.message;
     } finally {

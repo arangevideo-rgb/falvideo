@@ -17,4 +17,11 @@ npm start
 
 - `server.js` — Express サーバー。`/api/generate` が fal.ai にリクエストを送る(APIキーはサーバー側のみで保持)
 - `public/index.html` — プロンプト入力〜動画プレビューのシンプルなUI
-- モデルは環境変数 `FAL_MODEL` で切り替え可能(デフォルト: `fal-ai/ltx-video`)
+- `modelSelector.js` — Claude がプロンプトを解析し、最適な fal.ai モデルと入力パラメータを選ぶロジック
+
+## モデル選択モード
+
+- **自動選択モード**: `.env` に `ANTHROPIC_API_KEY` を設定すると有効になる。リクエストごとに Claude がプロンプト内容を見て `modelSelector.js` の候補一覧から最適なモデルを選び、そのモデル用のパラメータも生成する
+- **固定モード**: `ANTHROPIC_API_KEY` が未設定の場合、環境変数 `FAL_MODEL` のモデルを常に使う(デフォルト: `fal-ai/ltx-video`)
+
+候補モデルを増やしたい場合は `modelSelector.js` の `FAL_MODEL_CATALOG` に追加する。
