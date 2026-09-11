@@ -25,3 +25,9 @@ npm start
 - **固定モード**: `ANTHROPIC_API_KEY` が未設定の場合、環境変数 `FAL_MODEL` のモデルを常に使う(デフォルト: `fal-ai/ltx-video`)
 
 候補モデルを増やしたい場合は `modelSelector.js` の `FAL_MODEL_CATALOG` に追加する。
+
+## 画像/動画の添付(image-to-video)
+
+画面の「画像/動画を添付」からファイルを直接アップロードできる。画像が添付されている場合、自動選択モードは image-to-video 系のモデル(`fal-ai/kling-video/v1.6/standard/image-to-video`)を選び、アップロードされたファイルは fal.ai のストレージに転送されてから生成に使われる。この機能は自動選択モード(`ANTHROPIC_API_KEY` 設定時)でのみ有効。
+
+Google Drive など外部クラウドとの直接連携は未実装(必要になれば追加可能)。

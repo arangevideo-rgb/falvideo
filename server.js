@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import multer from 'multer';
 import { fal } from '@fal-ai/client';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -17,24 +18,41 @@ fal.config({ credentials: process.env.FAL_KEY });
 const FIXED_MODEL = process.env.FAL_MODEL;
 const useAutoModelSelection = !!process.env.ANTHROPIC_API_KEY;
 
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
+
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.post('/api/generate', async (req, res) => {
+app.post('/api/generate', upload.single('file'), async (req, res) => {
   const { prompt } = req.body;
   if (!prompt || typeof prompt !== 'string') {
     return res.status(400).json({ error: 'prompt is required' });
+  }
+
+  const hasImage = !!req.file;
+  if (hasImage && !useAutoModelSelection) {
+    return res.status(400).json({
+      error: '画像からの動画生成には自動モデル選択モード(ANTHROPIC_API_KEY)が必要です',
+    });
   }
 
   try {
     let model, input, reasoning;
 
     if (useAutoModelSelection) {
-      const selection = await selectFalModel(prompt);
+      const selection = await selectFalModel(prompt, { hasImage });
       model = selection.model;
       input = selection.input;
       reasoning = selection.reasoning;
+
+      if (hasImage) {
+        const uploadedUrl = await fal.storage.upload(
+          new Blob([req.file.buffer], { type: req.file.mimetype })
+        );
+        input.image_url = uploadedUrl;
+      }
+
       console.log(`[model selection] ${model} — ${reasoning}`);
     } else {
       model = FIXED_MODEL || 'fal-ai/ltx-video';

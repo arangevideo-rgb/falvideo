@@ -26,13 +26,27 @@ export const FAL_MODEL_CATALOG = [
     when_to_use: '品質とコストのバランスを取りたい、標準的な用途全般',
     input_schema: { prompt: 'string' },
   },
+  {
+    id: 'fal-ai/kling-video/v1.6/standard/image-to-video',
+    label: '画像から動画化(Kling v1.6)',
+    when_to_use: 'ユーザーが画像を添付している場合は必ずこれを選ぶ(テキストのみの依頼では選ばない)',
+    input_schema: {
+      prompt: 'string(画像をどう動かしたいかの説明)',
+      image_url: 'string(サーバー側で実際のURLに自動置換されるのでダミー文字列でよい)',
+      duration: '"5" または "10"(秒)',
+    },
+  },
 ];
 
 const catalogText = FAL_MODEL_CATALOG.map(
   (m) => `- id: ${m.id}\n  用途: ${m.when_to_use}\n  入力パラメータ: ${JSON.stringify(m.input_schema)}`
 ).join('\n');
 
-export async function selectFalModel(userPrompt) {
+export async function selectFalModel(userPrompt, { hasImage = false } = {}) {
+  const contextNote = hasImage
+    ? '\n\n【重要】このリクエストには画像が添付されています。必ず image-to-video 系のモデル(fal-ai/kling-video/v1.6/standard/image-to-video)を選んでください。'
+    : '\n\nこのリクエストに画像・動画の添付はありません。text-to-video系のモデルから選んでください。';
+
   const message = await anthropic.messages.create({
     model: CLAUDE_MODEL,
     max_tokens: 1024,
@@ -40,7 +54,8 @@ export async function selectFalModel(userPrompt) {
       'あなたは動画生成サービスのルーティング担当です。ユーザーの依頼内容を読み、' +
       '以下のfal.aiモデル一覧から最適なものを1つ選び、そのモデルが要求する入力パラメータを埋めてください。' +
       '必ずselect_modelツールを呼び出してください。\n\n利用可能なモデル:\n' +
-      catalogText,
+      catalogText +
+      contextNote,
     tools: [
       {
         name: 'select_model',
