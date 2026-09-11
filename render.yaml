@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: falvideo
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: FAL_KEY
+        sync: false
+      - key: FAL_MODEL
+        value: fal-ai/ltx-video
